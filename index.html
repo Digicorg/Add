@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digic Form</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #eef5fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    form {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 350px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #4A90E2;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #357ABD;
+    }
+
+    .success {
+      text-align: center;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <form id="digicForm">
+    <h2>Employee Contact</h2>
+    <input type="text" id="name" placeholder="Enter your name" required>
+    <input type="tel" id="contact" placeholder="Enter contact number" required>
+    <button type="submit">Submit</button>
+    <div id="status" class="success"></div>
+  </form>
+
+  <script>
+    document.getElementById('digicForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+
+      fetch("https://script.google.com/macros/s/AKfycbwLDP_PtgYq13vUXRXRqaHTP4YwrnLky1cFkf30-gOKKvUgncD_7ZiQLrP_06vZVkTMpw/exec", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('name').value,
+          contact: document.getElementById('contact').value
+        })
+      })
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById('status').textContent = 'Submitted successfully!';
+        document.getElementById('digicForm').reset();
+      })
+      .catch(err => {
+        document.getElementById('status').textContent = 'Submission failed!';
+        console.error(err);
+      });
+    });
+  </script>
+</body>
+</html>
