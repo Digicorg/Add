@@ -1,89 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Digic Form</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digic Employee Portal</title>
   <style>
+    :root {
+      --primary: #4A90E2;
+      --hover: #357ABD;
+      --bg: #f0f4f8;
+      --card-bg: rgba(255, 255, 255, 0.8);
+      --text: #333;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: Arial;
-      background: #eef5fc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #dfefff, #f0f4f8);
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
-    }
-
-    form {
-      background: white;
+      justify-content: center;
       padding: 2rem;
-      border-radius: 12px;
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      color: var(--text);
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .tab-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      max-width: 800px;
+      width: 100%;
+    }
+
+    .tab {
+      background: var(--card-bg);
+      color: var(--text);
+      padding: 1.5rem 2rem;
+      text-decoration: none;
+      border-radius: var(--radius);
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 350px;
-    }
-
-    h2 {
+      font-size: 1.25rem;
+      font-weight: 500;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      flex: 1 1 250px;
       text-align: center;
-      margin-bottom: 1rem;
     }
 
-    input, button {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      font-size: 1rem;
+    .tab:hover {
+      background-color: var(--primary);
+      color: #fff;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
     }
 
-    button {
-      background-color: #4A90E2;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #357ABD;
-    }
-
-    .success {
-      text-align: center;
-      color: green;
-      font-weight: bold;
+    @media (max-width: 600px) {
+      .tab {
+        padding: 1.2rem 1rem;
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <form id="digicForm">
-    <h2>Employee Contact</h2>
-    <input type="text" id="name" placeholder="Enter your name" required>
-    <input type="tel" id="contact" placeholder="Enter contact number" required>
-    <button type="submit">Submit</button>
-    <div id="status" class="success"></div>
-  </form>
-
-  <script>
-    document.getElementById('digicForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
-
-      fetch("https://script.google.com/macros/s/AKfycbwLDP_PtgYq13vUXRXRqaHTP4YwrnLky1cFkf30-gOKKvUgncD_7ZiQLrP_06vZVkTMpw/exec", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: document.getElementById('name').value,
-          contact: document.getElementById('contact').value
-        })
-      })
-      .then(res => res.text())
-      .then(data => {
-        document.getElementById('status').textContent = 'Submitted successfully!';
-        document.getElementById('digicForm').reset();
-      })
-      .catch(err => {
-        document.getElementById('status').textContent = 'Submission failed!';
-        console.error(err);
-      });
-    });
-  </script>
+  <h1>Director Dashboard</h1>
+  <div class="tab-container">
+    <a href="https://forms.gle/SFGx3YxcUQ3scNKX8" class="tab" target="_blank">
+      Expense Form
+    </a>
+       <a href="https://docs.google.com/spreadsheets/d/1zpEX6jPWUwakx90vcCMFIc5IU1vpfApOsZOKgnl-TU4/edit?usp=sharing" class="tab" target="_blank">
+      Expense Detail Excel
+    </a>
+    <!-- Add more tabs here if needed -->
+  </div>
 </body>
 </html>
