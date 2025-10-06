@@ -151,6 +151,9 @@
     <a href="https://drive.google.com/drive/folders/1ix_ySb0lCDDQcGWTj_mfYCB8GRPLwUw1?usp=drive_link" class="tab" target="_blank">DIGIC Drive</a>
     <div class="tab" onclick="toggleSection('generatorSection')">Link Generator</div>
     <div class="tab" onclick="toggleSection('copySection')">Copy Links</div>
+
+      <div class="tab" onclick="openTracker()">NFC Order Tracker</div>
+</div>
   </div>
 
   <!-- Link Generator Section -->
@@ -214,7 +217,13 @@
         .then(() => alert("Copied: " + text))
         .catch(err => alert("Failed to copy: " + err));
     }
+function openTracker() {
+    // Opens tracker.html in the same tab
+    window.location.href = "orderTracker.html";
 
+    // OR to open in a new tab:
+    // window.open("tracker.html", "_blank");
+  }
     function copyLink(id) {
       const text = document.getElementById(id).textContent + " LINK";
       navigator.clipboard.writeText(text)
@@ -225,3 +234,4 @@
 
 </body>
 </html>
+
