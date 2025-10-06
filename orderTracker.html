@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC Card Order Tracker</title>
+<style>
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f3f4f6;
+    margin: 0;
+    padding: 15px;
+  }
+
+  h2 {
+    text-align: center;
+    color: #222;
+    margin-bottom: 10px;
+  }
+
+  form {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 450px;
+    margin: 0 auto 20px auto;
+  }
+
+  input, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  button {
+    background: #4CAF50;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background: #43a047;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+  }
+
+  th, td {
+    text-align: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 15px;
+  }
+
+  th {
+    background: #4CAF50;
+    color: #fff;
+  }
+
+  tr:nth-child(even) {
+    background: #f9f9f9;
+  }
+
+  .done {
+    background-color: #c8e6c9;
+    color: #256029;
+    font-weight: bold;
+    border-radius: 5px;
+  }
+
+  .pending {
+    background-color: #ffcdd2;
+    color: #b71c1c;
+    font-weight: bold;
+    border-radius: 5px;
+  }
+
+  .name-green {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+  }
+
+  .name-red {
+    background-color: #e53935;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+  }
+
+  td {
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  td:hover {
+    transform: scale(1.02);
+  }
+
+  @media(max-width: 600px) {
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    tr { margin-bottom: 15px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    td {
+      text-align: right;
+      padding: 10px 15px;
+      border: none;
+      position: relative;
+    }
+    td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 15px;
+      top: 10px;
+      font-weight: bold;
+      text-align: left;
+      color: #333;
+    }
+  }
+</style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBcMBLjda3ZbYxo-rsyzIBXoM2JilNtMaU",
+    authDomain: "digic-organization.firebaseapp.com",
+    projectId: "digic-organization",
+    storageBucket: "digic-organization.firebasestorage.app",
+    messagingSenderId: "142724095113",
+    appId: "1:142724095113:web:8104e52bbed7598d3ffa58"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+</head>
+<body>
+
+<h2>📦 NFC Card Order Tracker</h2>
+
+<form id="orderForm">
+  <input type="text" id="userName" placeholder="Enter Customer Name" required>
+  <button type="submit">Add Order</button>
+</form>
+
+<div class="table-container">
+  <table id="orderTable">
+    <thead>
+      <tr>
+        <th>Customer</th>
+        <th>Step 1: Payment Done</th>
+        <th>Step 2: Login Added</th>
+        <th>Step 3: Details Updated</th>
+        <th>Step 4: Delivery</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+const form = document.getElementById('orderForm');
+const tableBody = document.querySelector('#orderTable tbody');
+const ordersRef = db.collection('nfc_orders');
+
+// Add new order
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = document.getElementById('userName').value.trim();
+  if (!name) return;
+  await ordersRef.add({
+    name,
+    steps: [false, false, false, false],
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  form.reset();
+});
+
+// Toggle step completion
+async function toggleStep(id, stepIndex, steps) {
+  steps[stepIndex] = !steps[stepIndex];
+  await ordersRef.doc(id).update({ steps });
+}
+
+// Delete order
+async function deleteOrder(id) {
+  if (confirm('Delete this order?')) {
+    await ordersRef.doc(id).delete();
+  }
+}
+
+// Realtime updates
+ordersRef.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+  tableBody.innerHTML = '';
+  snapshot.forEach(doc => {
+    const order = doc.data();
+    const allDone = order.steps.every(s => s === true);
+    const nameClass = allDone ? 'name-green' : 'name-red';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td data-label="Customer" class="${nameClass}">${order.name}</td>
+      ${order.steps.map((done, i) => `
+        <td data-label="Step ${i + 1}" 
+            class="${done ? 'done' : 'pending'}"
+            onclick="toggleStep('${doc.id}', ${i}, ${JSON.stringify(order.steps)})">
+          ${done ? '✅ Done' : '❌ Pending'}
+        </td>
+      `).join('')}
+      <td data-label="Actions"><button onclick="deleteOrder('${doc.id}')">🗑 Delete</button></td>
+    `;
+    tableBody.appendChild(row);
+  });
+});
+</script>
+
+</body>
+</html>
