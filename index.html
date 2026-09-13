@@ -147,6 +147,14 @@
             form.reset();
             form.dataset.docId = '';
             form.dataset.apiVerified = 'false';
+
+            // Passwords are required only when creating a NEW customer.
+            // Existing customers already exist in the API, so editing never needs
+            // admin/user passwords and never calls the API.
+            form.elements.admin_password.required = false;
+            form.elements.password.required = false;
+            form.elements.admin_password.disabled = false;
+            form.elements.password.disabled = false;
             const apiResponseBox = document.getElementById('api-response');
             if (apiResponseBox) {
                 apiResponseBox.style.display = 'none';
@@ -185,6 +193,19 @@
                 if (isEditMode) {
                     deleteBtn.dataset.docId = docData.id;
                     deleteBtn.style.display = 'block';
+
+                    // EDIT MODE: API credentials are not needed.
+                    form.elements.admin_password.required = false;
+                    form.elements.password.required = false;
+                    form.elements.admin_password.disabled = true;
+                    form.elements.password.disabled = true;
+
+                    const apiResponseBox = document.getElementById('api-response');
+                    if (apiResponseBox) {
+                        apiResponseBox.style.display = 'none';
+                        apiResponseBox.innerHTML = '';
+                        apiResponseBox.className = 'api-response';
+                    }
                 }
                 
             } else {
@@ -199,6 +220,12 @@
                 populateUsernameAndUrl(form); 
                 
                 setFormReadOnly(false); 
+
+                // NEW CUSTOMER: both API passwords are mandatory.
+                form.elements.admin_password.required = true;
+                form.elements.password.required = true;
+                form.elements.admin_password.disabled = false;
+                form.elements.password.disabled = false;
             }
             modal.style.display = 'flex';
             
@@ -340,12 +367,19 @@
             const form = event.target;
             const docId = form.dataset.docId;
             const isEdit = !!docId;
-            const responseBox = document.getElementById('api-response');
             const saveButton = form.querySelector('button[type="submit"]');
 
-            // If API already succeeded, the second click confirms Firestore save.
+            // EDIT MODE: the customer already exists in the API.
+            // Do NOT call the API and do NOT require any password.
+            if (isEdit) {
+                await saveCustomerToFirestore(form, docId, true);
+                return;
+            }
+
+            // NEW CUSTOMER: if API already succeeded, the second click confirms
+            // the Firestore save.
             if (form.dataset.apiVerified === 'true') {
-                await saveCustomerToFirestore(form, docId, isEdit);
+                await saveCustomerToFirestore(form, docId, false);
                 return;
             }
 
@@ -393,7 +427,7 @@
             showApiResponse('loading', 'Submitting user to API... Please wait.');
 
             try {
-                // IMPORTANT: API is called FIRST. Firestore is NOT saved yet.
+                // API is called FIRST. Firestore is NOT saved yet.
                 const apiResponse = await submitUserToAPI(data);
 
                 form.dataset.apiVerified = 'true';
@@ -406,9 +440,7 @@
                 );
 
                 saveButton.disabled = false;
-                saveButton.textContent = isEdit
-                    ? 'Confirm & Update Customer'
-                    : 'Confirm & Save Customer';
+                saveButton.textContent = 'Confirm & Save Customer';
 
             } catch (apiError) {
                 console.error('User API submission error:', apiError);
@@ -481,12 +513,14 @@
                 console.error('Error saving document:', error);
                 showApiResponse(
                     'error',
-                    'API succeeded, but Firestore save failed. Please try again.',
+                    isEdit
+                        ? 'Customer update failed in Firestore. Please try again.'
+                        : 'API succeeded, but Firestore save failed. Please try again.',
                     error.message
                 );
                 saveButton.disabled = false;
                 saveButton.textContent = isEdit
-                    ? 'Confirm & Update Customer'
+                    ? 'Update Customer'
                     : 'Confirm & Save Customer';
             }
         }
@@ -1161,10 +1195,10 @@
                 <label for="mobile">Mobile*</label><input type="tel" id="mobile" name="mobile">
                 <label for="email">Email</label><input type="email" id="email" name="email">
 
-                <label for="admin_password">Admin Password*(ask lead)</label>
+                <label for="admin_password">Admin Password (New Customer)</label>
                 <input type="password" id="admin_password" name="admin_password" placeholder="InsertPassword" required autocomplete="current-password">
 
-                <label for="password">Password*</label>
+                <label for="password">User Password (New Customer)</label>
                 <input type="password" id="password" name="password" placeholder="InsertPassword" required autocomplete="new-password">
                 
                 <label for="username">Username (Auto, but Editable)</label>
